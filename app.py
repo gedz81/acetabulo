@@ -7,32 +7,25 @@ from sklearn.cluster import KMeans
 st.title("Clasificador Morfológico de Pelvis de Guanaco")
 st.write("Ingrese las medidas para clasificar el espécimen y visualizar su posición en el morfoespacio.")
 
-# 1. Cargamos los datos y corregimos el intercambio de columnas
+# 1. Cargamos los datos limpios manteniendo el orden correcto de tus columnas
 @st.cache_data
 def cargar_y_procesar_datos():
-    # Leemos el CSV original
     df = pd.read_csv('medidasAcetabulo.csv', sep=';')
     
-    # Limpiamos comas por puntos y convertimos a float
-    val1 = df['HIS'].astype(str).str.replace(',', '.').astype(float)
-    val2 = df['HAM'].astype(str).str.replace(',', '.').astype(float)
-    
-    # Aquí intercambiamos las variables para corregir el error original:
-    # Lo que antes era HAM pasa a ser HIS, y lo que era HIS pasa a ser HAM
-    df['HIS'] = val2  # O el orden real que corresponda
-    df['HAM'] = val1
+    # Limpiamos comas por puntos y convertimos a float de forma directa
+    df['HIS'] = df['HIS'].astype(str).str.replace(',', '.').astype(float)
+    df['HAM'] = df['HAM'].astype(str).str.replace(',', '.').astype(float)
     
     return df
 
 df_base = cargar_y_procesar_datos()
 
-# 2. Recalculamos los centroides de forma automática con K-medias sobre los datos corregidos
+# 2. Calculamos los centroides automáticamente con K-medias
 X = df_base[['HIS', 'HAM']]
 kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
 df_base['cluster'] = kmeans.fit_predict(X)
 
-# Asignamos dinámicamente los centroides calculados
-# Identificamos cuál centroide corresponde a hembras (el de menor media en HAM/HIS) y cuál a machos
+# Asignamos dinámicamente los centroides
 centroides = kmeans.cluster_centers_
 if centroides[0][1] < centroides[1][1]:
     centroide_hembra = centroides[0]
@@ -51,7 +44,7 @@ with col2:
 if st.button("Clasificar y Graficar"):
     punto_nuevo = np.array([his_input, ham_input])
     
-    # Calculamos la distancia euclidiana a los centroides corregidos
+    # Distancia euclidiana
     dist_hembra = np.linalg.norm(punto_nuevo - centroide_hembra)
     dist_macho = np.linalg.norm(punto_nuevo - centroide_macho)
     
@@ -61,7 +54,7 @@ if st.button("Clasificar y Graficar"):
     else:
         st.info(f"🔵 El espécimen se clasifica como: **MACHO** (Distancia: {dist_macho:.2f})")
     
-    # 4. Generamos el gráfico del morfoespacio corregido
+    # 4. Generamos el gráfico del morfoespacio con los ejes bien ordenados
     fig, ax = plt.subplots(figsize=(8, 6))
     
     hembras_ref = df_base[df_base['Sexo'] == 'H']
@@ -78,7 +71,7 @@ if st.button("Clasificar y Graficar"):
     
     ax.set_xlabel('HIS')
     ax.set_ylabel('HAM')
-    ax.set_title('Morfoespacio Corregido de Pelvis de Guanaco')
+    ax.set_title('Morfoespacio de Pelvis de Guanaco (HIS vs HAM)')
     ax.legend(loc='upper left')
     ax.grid(True, linestyle='--', alpha=0.5)
     
