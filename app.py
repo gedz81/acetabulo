@@ -23,9 +23,9 @@ centroide_macho = np.array([19.49400000, 41.64600000])
 # 2. Campos de entrada en la barra lateral o principal
 col1, col2 = st.columns(2)
 with col1:
-    his_input = st.number_input("Medida HIS:", value=17.0, format="%.2f")
+    his_input = st.number_input("Medida HAM:", value=17.0, format="%.2f")
 with col2:
-    ham_input = st.number_input("Medida HAM:", value=37.0, format="%.2f")
+    ham_input = st.number_input("Medida HIS:", value=37.0, format="%.2f")
 
 if st.button("Clasificar y Graficar"):
     # Convertimos la entrada en un vector
