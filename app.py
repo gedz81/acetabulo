@@ -7,27 +7,27 @@ from sklearn.cluster import KMeans
 st.title("Clasificador Morfológico de Pelvis de Guanaco")
 st.write("Ingrese las medidas para clasificar el espécimen y visualizar su posición en el morfoespacio.")
 
-# 1. Cargamos los datos limpios manteniendo el orden correcto de tus columnas
+# 1. Cargamos los datos del CSV corregido
 @st.cache_data
-def cargar_y_procesar_datos():
+def cargar_datos():
     df = pd.read_csv('medidasAcetabulo.csv', sep=';')
     
-    # Limpiamos comas por puntos y convertimos a float de forma directa
+    # Limpiamos comas por puntos y convertimos a float
     df['HIS'] = df['HIS'].astype(str).str.replace(',', '.').astype(float)
     df['HAM'] = df['HAM'].astype(str).str.replace(',', '.').astype(float)
     
     return df
 
-df_base = cargar_y_procesar_datos()
+df_base = cargar_datos()
 
 # 2. Calculamos los centroides automáticamente con K-medias
 X = df_base[['HIS', 'HAM']]
 kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
 df_base['cluster'] = kmeans.fit_predict(X)
 
-# Asignamos dinámicamente los centroides
+# Asignamos dinámicamente los centroides según el tamaño (hembras vs machos)
 centroides = kmeans.cluster_centers_
-if centroides[0][1] < centroides[1][1]:
+if centroides[0][0] < centroides[1][0]:
     centroide_hembra = centroides[0]
     centroide_macho = centroides[1]
 else:
@@ -54,12 +54,13 @@ if st.button("Clasificar y Graficar"):
     else:
         st.info(f"🔵 El espécimen se clasifica como: **MACHO** (Distancia: {dist_macho:.2f})")
     
-    # 4. Generamos el gráfico del morfoespacio con los ejes bien ordenados
+    # 4. Generamos el gráfico del morfoespacio asegurando Eje X = HIS y Eje Y = HAM
     fig, ax = plt.subplots(figsize=(8, 6))
     
     hembras_ref = df_base[df_base['Sexo'] == 'H']
     machos_ref = df_base[df_base['Sexo'] == 'M']
     
+    # Eje X: HIS, Eje Y: HAM
     ax.scatter(hembras_ref['HIS'], hembras_ref['HAM'], color='lightcoral', label='Hembras (referencia)', alpha=0.7, s=50)
     ax.scatter(machos_ref['HIS'], machos_ref['HAM'], color='skyblue', label='Machos (referencia)', alpha=0.7, s=50)
     
